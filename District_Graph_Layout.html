@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Malawi District Graph</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>  <!--JS Library for Visualization and Graph Layout Algorithm-->
+  <style>
+    svg {
+    
+      border: 1px solid #ccc;
+    }
+    circle {
+      fill: #3498db;
+      stroke: #fff;
+      stroke-width: 1.5px;
+    }
+    line {
+      stroke: #aaa;
+    }
+    text {
+      font-size: 10px;
+      fill: #333;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+    <!-- SVG container for the graph visualization -->
+  <svg width="800" height="800"></svg>      
+
+  <script>
+    const width = 800, height = 800; // Dimensions for the SVG canvas
+    
+    // Initilizing Graph data nodes and edges
+    const data = {
+        nodes: [
+        { id: "Blantyre", x: 0.9134213014976535, y: 0.2540740323898225 },
+        { id: "Chikwawa", x: 0.14374226893980302, y: 0.3910154112946962 },
+        { id: "Chiradzulu", x: 0.9351749046225152, y: 0.5027042682331085 },
+        { id: "Chitipa", x: 0.5033532302137712, y: 0.6371050642113303 },
+        { id: "Dedza", x: 0.32675593364689126, y: 0.32741458873737384 },
+        { id: "Dowa", x: 0.44893854232683894, y: 0.3534310438093927 },
+        { id: "Karonga", x: 0.7719114930591756, y: 0.7164846847486838 },
+        { id: "Kasungu", x: 0.9486271739760203, y: 0.03717616769235954 },
+        { id: "Lilongwe", x: 0.03185092819745572, y: 0.07907784991666855 },
+        { id: "Machinga", x: 0.4976553188158377, y: 0.15957191749775634 },
+        { id: "Mangochi", x: 0.2417748469656349, y: 0.22132470346325728 },
+        { id: "Mchinji", x: 0.8029651384628501, y: 0.4170419722297135 },
+        { id: "Mulanje", x: 0.6998851394303303, y: 0.7300336822154281 },
+        { id: "Mwanza", x: 0.3093976112949879, y: 0.9141857772478698 },
+        { id: "Mzimba", x: 0.16190201617155997, y: 0.8356366262711726 },
+        { id: "Neno", x: 0.9869012833729535, y: 0.3511167097222222 },
+        { id: "Nkhata Bay", x: 0.0882233026546202, y: 0.18674223158715342 },
+        { id: "Nkhotakota", x: 0.17467106409589772, y: 0.0010883823237957113 },
+        { id: "Nsanje", x: 0.8093914854184416, y: 0.5079865816371467 },
+        { id: "Ntcheu", x: 0.8588177668360885, y: 0.4167540312634731 },
+        { id: "Ntchisi", x: 0.3969781197576786, y: 0.9982702660465445 },
+        { id: "Phalombe", x: 0.934352810085411, y: 0.7328019939159007 },
+        { id: "Rumphi", x: 0.2438492080065875, y: 0.0387865957339274 },
+        { id: "Salima", x: 0.837201462046805, y: 0.9965726289086905 },
+        { id: "Thyolo", x: 0.6272655175304893, y: 0.7688215502317457 },
+        { id: "Zomba", x: 0.7252659639019722, y: 0.810888016094619 },
+        { id: "Balaka", x: 0.15932838570160823, y: 0.5698123530031478 },
+        { id: "Likoma", x: 0.3488343806746971, y: 0.6253864059894712 }
+      ],
+      // List of district connections converted to link format for D3
+      Edges: [
+        ["Blantyre", "Chikwawa"], ["Blantyre", "Chiradzulu"], ["Blantyre", "Thyolo"], 
+        ["Chikwawa", "Nsanje"], ["Chikwawa", "Mwanza"], ["Chiradzulu", "Zomba"],
+        ["Chiradzulu", "Phalombe"], ["Chitipa", "Karonga"], ["Dedza", "Lilongwe"],
+        ["Dedza", "Ntcheu"], ["Dowa", "Lilongwe"], ["Dowa", "Ntchisi"],
+        ["Karonga", "Rumphi"], ["Kasungu", "Lilongwe"], ["Kasungu", "Mzimba"],
+        ["Lilongwe", "Mchinji"], ["Lilongwe", "Salima"], ["Machinga", "Zomba"],
+        ["Machinga", "Balaka"], ["Mangochi", "Balaka"], ["Mangochi", "Salima"],
+        ["Mulanje", "Phalombe"], ["Mulanje", "Thyolo"], ["Mwanza", "Neno"],
+        ["Mzimba", "Nkhata Bay"], ["Mzimba", "Rumphi"], ["Nkhata Bay", "Nkhotakota"],
+        ["Nkhotakota", "Salima"], ["Nsanje", "Chikwawa"], ["Ntcheu", "Balaka"],
+        ["Ntchisi", "Nkhotakota"], ["Phalombe", "Mulanje"], ["Salima", "Nkhotakota"],
+        ["Zomba", "Machinga"]
+      ].map(([source, target]) => ({ source, target}))
+    };
+
+    // Selection of the SVG element where the graph will be drawn
+    const svg = d3.select("svg");
+
+    const simulation = d3.forceSimulation(data.nodes)  //Initializing force simulation
+      .force("link", d3.forceLink(data.Edges).id(d => d.id).distance(90)) //adds spring between connected nodes
+      .force("charge", d3.forceManyBody().strength(-100)) //Adds repulsion between all nodes
+      .force("center", d3.forceCenter(width / 2, height / 2)) //Keeps the entire graph centered in the SVG canvas
+      .force("collide", d3.forceCollide(50))  //prevents nodes from overlapping
+      .on("tick", ticked); //function to update the positions of nodes and Edgess on the screen
+    
+      //Draw Edges
+    const link = svg.append("g")
+      .selectAll("line")
+      .data(data.Edges)
+      .join("line");
+
+      //Draw Nodes
+    const node = svg.append("g")
+      .selectAll("circle")
+      .data(data.nodes)
+      .join("circle")
+      .attr("r", 5);
+
+      // Draw the labels
+    const label = svg.append("g")
+      .selectAll("text")
+      .data(data.nodes)
+      .join("text")
+      .text(d => d.id)
+      .attr("dy", -8);
+
+    function ticked() {
+        // Calculate bounding box of current node positions
+        const xs = data.nodes.map(n => n.x);
+        const ys = data.nodes.map(n => n.y);
+        const minX = Math.min(...xs);
+        const maxX = Math.max(...xs);
+        const minY = Math.min(...ys);
+        const maxY = Math.max(...ys);
+
+          // Add margin (5%) on all sides
+        const padding = 0.05; // 5% padding
+        
+        // Normalize all node positions to [0, 1]
+        data.nodes.forEach(n => {
+            n.x_norm = padding + ((n.x - minX) / (maxX - minX)) * (1 - 2 * padding);
+            n.y_norm = padding + ((n.y - minY) / (maxY - minY)) * (1 - 2 * padding);
+        });
+
+        // Now scale normalized coords to fit SVG dimensions
+        node
+            .attr("cx", d => d.x = d.x_norm * width)
+            .attr("cy", d => d.y = d.y_norm * height);
+
+        label
+            .attr("x", d => d.x)
+            .attr("y", d => d.y);
+
+        link
+            .attr("x1", d => d.source.x = d.source.x_norm * width)
+            .attr("y1", d => d.source.y = d.source.y_norm * height)
+            .attr("x2", d => d.target.x = d.target.x_norm * width)
+            .attr("y2", d => d.target.y = d.target.y_norm * height);
+    }
+
+    // After simulation settles, output normalized node positions (in 1x1 unit square)
+    setTimeout(() => {
+        const xs = data.nodes.map(n => n.x);
+        const ys = data.nodes.map(n => n.y);
+        const minX = Math.min(...xs);
+        const maxX = Math.max(...xs);
+        const minY = Math.min(...ys);
+        const maxY = Math.max(...ys);
+
+        const padding = 0.05;
+
+        const normalizedOutput = data.nodes.map(n => ({
+            id: n.id,
+            x: +(padding + ((n.x - minX) / (maxX - minX)) * (1 - 2 * padding)).toFixed(4),
+            y: +(padding + ((n.y - minY) / (maxY - minY)) * (1 - 2 * padding)).toFixed(4)
+        }));
+
+        console.log("Final node positions normalized to 1x1 unit square:");
+        console.table(normalizedOutput);
+    }, 5000); 
+
+  </script>
+</body>
+</html>
